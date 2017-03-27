@@ -7,6 +7,7 @@
 
 """Test a Fast R-CNN network."""
 
+import csv
 from fast_rcnn.config import cfg, get_output_dir
 from fast_rcnn.bbox_transform import clip_boxes, bbox_transform_inv
 import argparse
@@ -234,12 +235,18 @@ def apply_nms(all_boxes, thresh):
 
 def run_net(net, max_per_image=400, thresh=-np.inf, vis=False):
     """Test a Fast R-CNN network on an image database."""
-    num_images = 1
+    num_images = 1000000
     num_classes = 81 # background + COCO
     output_dir = './standalone_test'
     fnames = ['./0_orig.png']
     class_names = ['background'] + \
         map(lambda x: x.strip().replace(' ', '_'), open('./coco.names').readlines())
+
+    video_fname = '/root/infolab/fabuzaid/vuse-datasets-completed/videos/taipei.mp4'
+    cap = cv2.VideoCapture(video_fname)
+    fout = open(os.path.join(output_dir, 'taipei.csv'), 'w')
+    csv_writer = csv.writer(fout)
+    csv_writer.writerow(['frame', 'object_name', 'confidence', 'xmin', 'ymin', 'xmax', 'ymax'])
 
     # all detections are collected into:
     #    all_boxes[cls][image] = N x 5 array of detections in
@@ -263,7 +270,10 @@ def run_net(net, max_per_image=400, thresh=-np.inf, vis=False):
             # ground truth.
             box_proposals = roidb[i]['boxes'][roidb[i]['gt_classes'] == 0]
 
-        im = cv2.imread(fnames[i])
+        # im = cv2.imread(fnames[i])
+        _, im = cap.read()
+        if im is None:
+            break
         _t['im_detect'].tic()
         scores, boxes = im_detect(net, im, box_proposals)
         _t['im_detect'].toc()
@@ -283,9 +293,17 @@ def run_net(net, max_per_image=400, thresh=-np.inf, vis=False):
             cls_dets = cls_dets[keep, :]
             if vis:
                 vis_detections(im, class_names[j], cls_dets)
-            all_boxes[j][i] = cls_dets
 
-        # Limit to max_per_image detections *over all classes*
+            # Write to CSV
+            for k in xrange(cls_dets.shape[0]):
+                bbox = cls_dets[k, :4]
+                score = cls_dets[k, -1]
+                if score > 0.5:
+                    csv_writer.writerow([i, class_names[j], score, bbox[0], bbox[1], bbox[2], bbox[3]])
+
+            # all_boxes[j][i] = cls_dets
+
+        '''# Limit to max_per_image detections *over all classes*
         if max_per_image > 0:
             image_scores = np.hstack([all_boxes[j][i][:, -1]
                                       for j in xrange(1, num_classes)])
@@ -293,13 +311,13 @@ def run_net(net, max_per_image=400, thresh=-np.inf, vis=False):
                 image_thresh = np.sort(image_scores)[-max_per_image]
                 for j in xrange(1, num_classes):
                     keep = np.where(all_boxes[j][i][:, -1] >= image_thresh)[0]
-                    all_boxes[j][i] = all_boxes[j][i][keep, :]
+                    all_boxes[j][i] = all_boxes[j][i][keep, :]'''
         _t['misc'].toc()
 
         print 'im_detect: {:d}/{:d} {:.3f}s {:.3f}s' \
               .format(i + 1, num_images, _t['im_detect'].average_time,
                       _t['misc'].average_time)
 
-    det_file = os.path.join(output_dir, 'detections.pkl')
+    '''det_file = os.path.join(output_dir, 'detections.pkl')
     with open(det_file, 'wb') as f:
-        cPickle.dump(all_boxes, f, cPickle.HIGHEST_PROTOCOL)
+        cPickle.dump(all_boxes, f, cPickle.HIGHEST_PROTOCOL)'''
