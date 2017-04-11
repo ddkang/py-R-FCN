@@ -50,6 +50,8 @@ def parse_args():
                         default=400, type=int)
     parser.add_argument('--rpn_file', dest='rpn_file',
                         default=None, type=str)
+    parser.add_argument('--video_file', type=str)
+    parser.add_argument('--csv_out_file', type=str)
 
     if len(sys.argv) == 1:
         parser.print_help()
@@ -83,4 +85,5 @@ if __name__ == '__main__':
     net = caffe.Net(args.prototxt, args.caffemodel, caffe.TEST)
     net.name = os.path.splitext(os.path.basename(args.caffemodel))[0]
 
-    run_net(net, max_per_image=args.max_per_image, vis=args.vis)
+    run_net(net, args.video_file, args.csv_out_file,
+            max_per_image=args.max_per_image, vis=args.vis)

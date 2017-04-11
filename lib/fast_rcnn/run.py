@@ -233,26 +233,26 @@ def apply_nms(all_boxes, thresh):
             nms_boxes[cls_ind][im_ind] = dets[keep, :].copy()
     return nms_boxes
 
-def run_net(net, max_per_image=400, thresh=-np.inf, vis=False):
+def run_net(net, video_fname, csv_out_fname,
+            max_per_image=400, thresh=-np.inf, vis=False):
     """Test a Fast R-CNN network on an image database."""
-    num_images = 1000000
+    num_images = 100000000
     num_classes = 81 # background + COCO
     output_dir = './standalone_test'
     fnames = ['./0_orig.png']
     class_names = ['background'] + \
         map(lambda x: x.strip().replace(' ', '_'), open('./coco.names').readlines())
 
-    video_fname = '/root/infolab/fabuzaid/vuse-datasets-completed/videos/taipei.mp4'
     cap = cv2.VideoCapture(video_fname)
-    fout = open(os.path.join(output_dir, 'taipei.csv'), 'w')
+    fout = open(csv_out_fname, 'w')
     csv_writer = csv.writer(fout)
     csv_writer.writerow(['frame', 'object_name', 'confidence', 'xmin', 'ymin', 'xmax', 'ymax'])
 
     # all detections are collected into:
     #    all_boxes[cls][image] = N x 5 array of detections in
     #    (x1, y1, x2, y2, score)
-    all_boxes = [[[] for _ in xrange(num_images)]
-                 for _ in xrange(num_classes)]
+    '''all_boxes = [[[] for _ in xrange(num_images)]
+                 for _ in xrange(num_classes)]'''
 
 
     # timers
