@@ -52,6 +52,7 @@ def parse_args():
                         default=None, type=str)
     parser.add_argument('--video_file', type=str)
     parser.add_argument('--csv_out_file', type=str)
+    parser.add_argument('--start_frame', default=0, type=int)
 
     if len(sys.argv) == 1:
         parser.print_help()
@@ -85,5 +86,5 @@ if __name__ == '__main__':
     net = caffe.Net(args.prototxt, args.caffemodel, caffe.TEST)
     net.name = os.path.splitext(os.path.basename(args.caffemodel))[0]
 
-    run_net(net, args.video_file, args.csv_out_file,
+    run_net(net, args.video_file, args.csv_out_file, args.start_frame,
             max_per_image=args.max_per_image, vis=args.vis)

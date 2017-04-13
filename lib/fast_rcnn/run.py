@@ -233,10 +233,10 @@ def apply_nms(all_boxes, thresh):
             nms_boxes[cls_ind][im_ind] = dets[keep, :].copy()
     return nms_boxes
 
-def run_net(net, video_fname, csv_out_fname,
+def run_net(net, video_fname, csv_out_fname, start_frame,
             max_per_image=400, thresh=-np.inf, vis=False):
     """Test a Fast R-CNN network on an image database."""
-    num_images = 100000000
+    num_images = 500000
     num_classes = 81 # background + COCO
     output_dir = './standalone_test'
     fnames = ['./0_orig.png']
@@ -244,6 +244,7 @@ def run_net(net, video_fname, csv_out_fname,
         map(lambda x: x.strip().replace(' ', '_'), open('./coco.names').readlines())
 
     cap = cv2.VideoCapture(video_fname)
+    cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
     fout = open(csv_out_fname, 'w')
     csv_writer = csv.writer(fout)
     csv_writer.writerow(['frame', 'object_name', 'confidence', 'xmin', 'ymin', 'xmax', 'ymax'])
@@ -258,7 +259,7 @@ def run_net(net, video_fname, csv_out_fname,
     # timers
     _t = {'im_detect' : Timer(), 'misc' : Timer()}
 
-    for i in xrange(num_images):
+    for i in xrange(start_frame, num_images + start_frame):
         # filter out any ground truth boxes
         if cfg.TEST.HAS_RPN:
             box_proposals = None
